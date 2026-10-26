@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebBuilder Studio Platform</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Prompt) -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-950 text-gray-100 font-sans antialiased min-h-screen overflow-x-hidden">
+
+    <!-- ========================================== -->
+    <!-- SCREEN 1: AUTHENTICATION (เข้าสู่ระบบ/สมัคร) -->
+    <!-- ========================================== -->
+    <div id="auth-screen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl p-8 transition-all">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 text-white text-3xl mb-4 shadow-lg shadow-indigo-500/30">
+                    <i class="fa-solid fa-code"></i>
+                </div>
+                <h1 class="text-2xl font-bold tracking-tight text-white">WebBuilder Studio</h1>
+                <p class="text-sm text-gray-400 mt-1">แพลตฟอร์มสร้างเว็บไซต์ออนไลน์ทำงาน 24 ชั่วโมง</p>
+            </div>
+
+            <div class="flex bg-gray-800/60 p-1 rounded-xl mb-6">
+                <button id="tab-login" onclick="switchAuthMode('login')" class="flex-1 py-2 text-sm font-medium rounded-lg transition text-white bg-indigo-600 shadow">เข้าสู่ระบบ</button>
+                <button id="tab-signup" onclick="switchAuthMode('signup')" class="flex-1 py-2 text-sm font-medium rounded-lg transition text-gray-400 hover:text-white">สมัครสมาชิก</button>
+            </div>
+
+            <form id="auth-form" onsubmit="handleAuthSubmit(event)" class="space-y-4">
+                <div id="field-name" class="hidden">
+                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">ชื่อผู้ใช้งาน</label>
+                    <div class="relative">
+                        <i class="fa-regular fa-user absolute left-3.5 top-3.5 text-gray-500"></i>
+                        <input type="text" id="input-name" placeholder="ชื่อของคุณ" class="w-full pl-10 pr-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl focus:outline-none focus:border-indigo-500 text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">อีเมล</label>
+                    <div class="relative">
+                        <i class="fa-regular fa-envelope absolute left-3.5 top-3.5 text-gray-500"></i>
+                        <input type="email" id="input-email" required placeholder="name@example.com" class="w-full pl-10 pr-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl focus:outline-none focus:border-indigo-500 text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">รหัสผ่าน</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-gray-500"></i>
+                        <input type="password" id="input-password" required placeholder="••••••••" class="w-full pl-10 pr-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl focus:outline-none focus:border-indigo-500 text-sm">
+                    </div>
+                </div>
+                <button type="submit" id="auth-submit-btn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-lg shadow-indigo-600/20 transition">
+                    เข้าสู่ระบบ
+                </button>
+            </form>
+
+            <div class="relative my-6 text-center">
+                <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-800"></div></div>
+                <span class="relative px-3 bg-gray-900 text-xs text-gray-500 uppercase">หรือ</span>
+            </div>
+
+            <button onclick="loginWithGoogle()" class="w-full py-2.5 bg-gray-950 hover:bg-gray-800 text-gray-200 border border-gray-800 font-medium rounded-xl flex items-center justify-center gap-3 transition">
+                <svg class="w-5 h-5" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                </svg>
+                ลงชื่อเข้าใช้ด้วย Google
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SCREEN 2: DASHBOARD (หน้ารวมเว็บไซต์) -->
+    <!-- ========================================== -->
+    <div id="dashboard-screen" class="hidden min-h-screen flex flex-col">
+        <header class="h-16 border-b border-gray-800 bg-gray-900/80 backdrop-blur px-6 flex items-center justify-between sticky top-0 z-40">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
+                    <i class="fa-solid fa-code"></i>
+                </div>
+                <span class="font-bold text-lg text-white">WebBuilder</span>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <button onclick="openCreateModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-xl shadow-lg shadow-indigo-600/20 flex items-center gap-2 transition">
+                    <i class="fa-solid fa-plus"></i> สร้างเว็บไซต์
+                </button>
+                <div class="h-6 w-px bg-gray-800"></div>
+                <div class="flex items-center gap-3">
+                    <div id="user-avatar" class="w-9 h-9 rounded-full bg-indigo-900 text-indigo-300 font-bold flex items-center justify-center border border-indigo-700">U</div>
+                    <span id="user-name-display" class="text-sm font-medium text-gray-300 hidden md:inline">User</span>
+                    <button onclick="logout()" title="ออกจากระบบ" class="text-gray-400 hover:text-rose-400 ml-2 transition">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h2 class="text-2xl font-bold text-white">เว็บไซต์ของคุณ</h2>
+                    <p class="text-sm text-gray-400">จัดการและออกแบบเว็บไซต์ของคุณ</p>
+                </div>
+            </div>
+
+            <div id="project-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+            <div id="empty-state" class="hidden flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-gray-800 rounded-3xl bg-gray-900/30">
+                <div class="w-20 h-20 rounded-full bg-gray-800 flex items-center justify-center text-gray-500 text-3xl mb-4">
+                    <i class="fa-solid fa-globe"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">ยังไม่มีเว็บไซต์ที่ถูกสร้าง</h3>
+                <p class="text-gray-400 max-w-md mb-6 text-sm">เริ่มต้นสร้างและออกแบบเว็บไซต์แรกของคุณได้เลย</p>
+                <button onclick="openCreateModal()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl shadow-lg shadow-indigo-600/20 flex items-center gap-2 transition">
+                    <i class="fa-solid fa-plus"></i> สร้างเว็บไซต์ใหม่
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- CREATE WEBSITE MODAL (พิมพ์โดเมนและนามสกุลอิสระ) -->
+    <div id="create-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 w-full max-w-lg rounded-2xl p-6 shadow-2xl">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-white">สร้างเว็บไซต์ใหม่</h3>
+                <button onclick="closeCreateModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <form onsubmit="handleCreateSite(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">ชื่อเว็บไซต์</label>
+                    <input type="text" id="site-name-input" required placeholder="เช่น my-sell" class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl focus:outline-none focus:border-indigo-500 text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">กำหนดโดเมน URL (พิมพ์นามสกุลอิสระ)</label>
+                    <div class="flex items-center rounded-xl bg-gray-950 border border-gray-800 overflow-hidden focus-within:border-indigo-500">
+                        <span class="px-3 text-gray-500 text-sm font-mono border-r border-gray-800 bg-gray-900/50 py-2.5">https://</span>
+                        <input type="text" id="site-url-input" required placeholder="my-sell" class="flex-1 bg-transparent px-3 py-2.5 text-sm focus:outline-none font-mono">
+                        <span class="px-2 text-gray-400 font-mono text-sm">.</span>
+                        <input type="text" id="site-tld-custom" required placeholder="com" class="w-28 bg-gray-900 border-l border-gray-800 px-3 py-2.5 text-sm text-indigo-400 font-mono focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="pt-4 flex justify-end gap-3">
+                    <button type="button" onclick="closeCreateModal()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium rounded-xl">ยกเลิก</button>
+                    <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl shadow-lg shadow-indigo-600/20">สร้างเลย</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SCREEN 3: SITE EDITOR (หน้าออกแบบและเขียนโค้ด) -->
+    <!-- ========================================== -->
+    <div id="editor-screen" class="hidden min-h-screen flex flex-col h-screen overflow-hidden">
+        <header class="h-14 border-b border-gray-800 bg-gray-900 px-4 flex items-center justify-between z-30 flex-shrink-0">
+            <div class="flex items-center gap-4">
+                <button onclick="backToDashboard()" class="text-gray-400 hover:text-white flex items-center gap-1.5 text-sm font-medium">
+                    <i class="fa-solid fa-arrow-left"></i> หน้ารวมเว็บ
+                </button>
+                <div class="h-4 w-px bg-gray-800"></div>
+                <div class="flex items-center gap-2">
+                    <span id="active-site-title" class="font-bold text-white text-sm">My Site</span>
+                    <span id="active-site-url" class="text-xs text-indigo-400 font-mono bg-indigo-950/60 px-2 py-0.5 rounded border border-indigo-800">https://my-sell.com</span>
+                </div>
+            </div>
+
+            <div class="flex items-center bg-gray-950 p-1 rounded-lg border border-gray-800 text-xs font-medium">
+                <button id="view-preview-btn" onclick="setEditorView('preview')" class="px-3 py-1 rounded-md text-white bg-indigo-600 shadow">
+                    <i class="fa-regular fa-eye mr-1"></i> ตัวอย่าง (Preview)
+                </button>
+                <button id="view-split-btn" onclick="setEditorView('split')" class="px-3 py-1 rounded-md text-gray-400 hover:text-white">
+                    <i class="fa-solid fa-columns mr-1"></i> สองฝั่ง (Split)
+                </button>
+                <button id="view-code-btn" onclick="setEditorView('code')" class="px-3 py-1 rounded-md text-gray-400 hover:text-white">
+                    <i class="fa-solid fa-code mr-1"></i> โค้ด (Code)
+                </button>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button onclick="openFileModal()" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-white text-xs font-medium rounded-lg border border-gray-700 flex items-center gap-1.5">
+                    <i class="fa-solid fa-file-plus text-indigo-400"></i> Code File
+                </button>
+                <button onclick="runCode()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg shadow flex items-center gap-1.5">
+                    <i class="fa-solid fa-play"></i> รันเว็บ
+                </button>
+                <button onclick="publishSite()" class="px-4 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold rounded-lg shadow-lg flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> เผยแพร่สู่ Google
+                </button>
+            </div>
+        </header>
+
+        <div class="flex-1 flex overflow-hidden">
+            <div class="w-56 border-r border-gray-800 bg-gray-950 flex flex-col flex-shrink-0">
+                <div class="p-3 border-b border-gray-800 flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-gray-400">ไฟล์ในโปรเจกต์</span>
+                    <button onclick="openFileModal()" title="สร้างไฟล์ใหม่" class="text-gray-400 hover:text-white text-xs"><i class="fa-solid fa-plus"></i></button>
+                </div>
+                <div id="file-list" class="flex-1 overflow-y-auto p-2 space-y-1"></div>
+            </div>
+
+            <div id="workspace-container" class="flex-1 flex overflow-hidden relative">
+                <div id="code-panel" class="w-1/2 h-full flex flex-col bg-gray-900 border-r border-gray-800 hidden">
+                    <div class="h-9 bg-gray-950 border-b border-gray-800 px-4 flex items-center justify-between">
+                        <span id="current-active-file-label" class="text-xs font-mono text-indigo-400">index.html</span>
+                        <span class="text-[10px] text-gray-500">HTML / CSS / JS</span>
+                    </div>
+                    <textarea id="code-input" oninput="liveUpdatePreview()" class="flex-1 w-full bg-gray-900 p-4 font-mono text-sm text-gray-200 focus:outline-none resize-none leading-relaxed" placeholder="เขียนโค้ดที่นี่..."></textarea>
+                </div>
+
+                <div id="preview-panel" class="w-full h-full bg-white flex flex-col relative">
+                    <div class="h-9 bg-gray-100 border-b border-gray-300 px-4 flex items-center gap-2">
+                        <div class="flex gap-1.5">
+                            <div class="w-2.5 h-2.5 rounded-full bg-rose-400"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>
+                        </div>
+                        <div class="flex-1 bg-white border border-gray-300 rounded px-3 py-0.5 text-xs text-gray-600 font-mono flex items-center gap-1 overflow-hidden">
+                            <i class="fa-solid fa-lock text-[10px] text-emerald-600"></i>
+                            <span id="preview-url-bar">https://my-sell.com</span>
+                        </div>
+                    </div>
+                    <iframe id="web-preview-iframe" class="flex-1 w-full h-full border-0 bg-white"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL เผยแพร่เว็บไซต์สำเร็จ -->
+    <div id="publish-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-indigo-500/30 w-full max-w-md rounded-2xl p-6 shadow-2xl text-center">
+            <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 text-3xl flex items-center justify-center mx-auto mb-4 border border-emerald-500/30 animate-bounce">
+                <i class="fa-solid fa-globe"></i>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">เผยแพร่เว็บไซต์สำเร็จ! 🚀</h3>
+            <p class="text-xs text-gray-400 mb-4">เว็บไซต์ของคุณออนไลน์และทำงาน 24 ชั่วโมงเรียบร้อยแล้ว</p>
+            
+            <div class="bg-gray-950 p-3 rounded-xl border border-gray-800 mb-4 flex items-center justify-between">
+                <span id="published-url-display" class="text-xs font-mono text-indigo-400 truncate">https://my-sell.com</span>
+                <button onclick="copySiteUrl()" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg ml-2 flex-shrink-0">
+                    <i class="fa-regular fa-copy"></i> คัดลอก
+                </button>
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="closePublishModal()" class="flex-1 py-2 bg-gray-800 text-gray-300 text-xs rounded-xl font-medium">ปิด</button>
+                <button onclick="downloadWebCode()" class="flex-1 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded-xl font-semibold">ดาวน์โหลดโค้ด .html</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CREATE FILE MODAL -->
+    <div id="file-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 w-full max-w-sm rounded-2xl p-6 shadow-2xl">
+            <h3 class="text-lg font-bold text-white mb-4">สร้างไฟล์ใหม่ (Code File)</h3>
+            <form onsubmit="handleCreateFile(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">ชื่อไฟล์ (พร้อมนามสกุล)</label>
+                    <input type="text" id="file-name-input" required placeholder="เช่น about.html หรือ styles.css" class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl focus:outline-none focus:border-indigo-500 text-sm font-mono">
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closeFileModal()" class="px-4 py-2 bg-gray-800 text-gray-300 text-sm rounded-xl">ยกเลิก</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl">สร้างไฟล์</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- GEMINI AI ASSISTANT WIDGET -->
+    <div id="gemini-widget" class="fixed bottom-5 right-5 z-50 flex flex-col items-end">
+        <div id="gemini-chat-window" class="hidden w-80 md:w-96 h-[480px] bg-gray-900 border border-indigo-500/30 rounded-2xl shadow-2xl flex flex-col overflow-hidden mb-3 animate-slide-up">
+            <div class="p-3.5 bg-gradient-to-r from-indigo-900 via-purple-900 to-gray-900 border-b border-gray-800 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-cyan-400 to-indigo-500 flex items-center justify-center text-white text-xs">
+                        <i class="fa-solid fa-sparkles"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-white leading-tight">Gemini AI Assistant</h4>
+                        <span class="text-[10px] text-emerald-400 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> พร้อมช่วยออกแบบเว็บ
+                        </span>
+                    </div>
+                </div>
+                <button onclick="toggleGeminiWidget()" class="text-gray-400 hover:text-white text-sm">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div id="gemini-messages" class="flex-1 p-3 overflow-y-auto space-y-3 text-xs">
+                <div class="bg-gray-800/80 p-3 rounded-xl border border-gray-700/50 text-gray-200">
+                    สวัสดีครับ! ผม **Gemini AI** พร้อมช่วยเหลือคุณออกแบบและเขียนโค้ดเว็บไซต์ครับ พิมพ์สั่งให้ผมช่วยสร้างหน้าเว็บได้เลย!
+                </div>
+            </div>
+
+            <form onsubmit="handleGeminiSubmit(event)" class="p-2.5 bg-gray-950 border-t border-gray-800 flex items-center gap-2">
+                <input type="text" id="gemini-input" placeholder="พิมพ์บอก Gemini เช่น สร้างหน้า Landing page..." class="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                <button type="submit" class="w-8 h-8 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center text-xs shadow-lg shadow-indigo-600/30">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+
+        <button onclick="toggleGeminiWidget()" class="h-13 px-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:scale-105 transition transform text-white rounded-full shadow-xl shadow-indigo-500/30 flex items-center gap-2.5 font-medium text-sm">
+            <i class="fa-solid fa-sparkles text-amber-300 text-base"></i>
+            <span>ถาม Gemini AI</span>
+        </button>
+    </div>
+
+    <!-- โหลดไฟล์ script.js ภายนอก -->
+    <script src="script.js"></script>
+</body>
+</html>
