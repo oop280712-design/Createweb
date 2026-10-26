@@ -1,0 +1,36 @@
+/* การตั้งค่าฟอนต์และการแสดงผลทั่วไป */
+body {
+    font-family: 'Prompt', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* สไตล์สำหรับ Scrollbar ในหน้าต่างโค้ดและแชท */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #090d16;
+}
+::-webkit-scrollbar-thumb {
+    background: #1f2937;
+    border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #374151;
+}
+
+/* แอนิเมชันเปิดหน้าต่างแชท Gemini */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.animate-slide-up {
+    animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
