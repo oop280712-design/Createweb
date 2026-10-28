@@ -1,11 +1,16 @@
 // ==========================================
-// STATE MANAGEMENT (จัดการข้อมูลระบบทั้งหมด)
+// STATE MANAGEMENT & PERSISTENCE (บันทึกข้อมูลอัตโนมัติ 24 ชม.)
 // ==========================================
 let currentUser = null;
 let currentAuthMode = 'login';
-let userProjects = [];
+let userProjects = JSON.parse(localStorage.getItem('webbuilder_projects') || '[]');
 let activeProjectId = null;
 let currentViewMode = 'preview';
+
+// บันทึกโปรเจกต์ลงความจำเครื่อง (localStorage) ป้องกันเว็บหายเมื่อออกจากระบบหรือยังไม่เผยแพร่
+function saveProjectsToStorage() {
+    localStorage.setItem('webbuilder_projects', JSON.stringify(userProjects));
+}
 
 // สลับโหมด เข้าสู่ระบบ / สมัครสมาชิก
 function switchAuthMode(mode) {
@@ -57,7 +62,7 @@ function logout() {
     if (dashboardScreen) dashboardScreen.classList.add('hidden');
 }
 
-// แสดงหน้า Dashboard (หน้ารวมเว็บไซต์) แบบปลอดภัย
+// แสดงหน้า Dashboard (หน้ารวมเว็บไซต์ที่สร้างไว้ทั้งหมด)
 function showDashboard() {
     const authScreen = document.getElementById('auth-screen');
     const editorScreen = document.getElementById('editor-screen');
@@ -116,7 +121,7 @@ function renderProjectCards() {
             </div>
             
             <div class="pt-4 border-t border-gray-800 flex items-center justify-between gap-2">
-                <span class="text-xs text-gray-500">${Object.keys(proj.files).length} ไฟล์</span>
+                <span class="text-xs text-gray-500">${Object.keys(proj.files).length} ไฟล์ (บันทึกอัตโนมัติ)</span>
                 <!-- ปุ่มจัดการเว็บไซต์ -->
                 <button onclick="openEditor('${proj.id}')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-600/20 flex items-center gap-1.5 transition">
                     <i class="fa-solid fa-gear"></i> จัดการเว็บไซต์
@@ -137,7 +142,7 @@ function closeCreateModal() {
     if (modal) modal.classList.add('hidden'); 
 }
 
-// สร้างเว็บไซต์ใหม่ (รองรับโดเมนและนามสกุลอิสระ)
+// สร้างเว็บไซต์ใหม่ (เก็บลงระบบทันทีแม้ยังไม่ได้เผยแพร่)
 function handleCreateSite(event) {
     event.preventDefault();
     const nameInput = document.getElementById('site-name-input');
@@ -157,13 +162,14 @@ function handleCreateSite(event) {
         url: fullUrl,
         files: {
             'index.html': generatePostableTemplate(name, fullUrl),
-            'style.css': '/* สไตล์ CSS ทำงานตลอด 24 ชม. */\nbody { background: #030712; }',
-            'script.js': '// ระบบทำงานออนไลน์ 24/7\nconsole.log("Online 24/7");'
+            'style.css': '/* เขียน CSS ตกแต่งเว็บไซต์ได้ที่นี่ */\nbody {\n    background-color: #030712;\n    color: #ffffff;\n}',
+            'script.js': '// จาวาสคริปต์ทำงานตลอด 24 ชั่วโมง\nconsole.log("System Online 24/7");'
         },
         activeFile: 'index.html'
     };
 
     userProjects.push(newProj);
+    saveProjectsToStorage();
     closeCreateModal();
     openEditor(newProj.id);
 }
@@ -175,12 +181,13 @@ function deleteProject(id) {
     
     if (confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบ "${projName}" ทิ้งออกจากระบบ?`)) {
         userProjects = userProjects.filter(p => p.id !== id);
+        saveProjectsToStorage();
         renderProjectCards();
     }
 }
 
 // ==========================================
-// SITE EDITOR & ACTIVE FILE INDICATOR (หลอดสถานะ)
+// SITE EDITOR & LIVE MULTI-FILE PREVIEW (หลอดสถานะและพรีวิวสด)
 // ==========================================
 
 function openEditor(projId) {
@@ -218,7 +225,7 @@ function backToDashboard() {
     renderProjectCards();
 }
 
-// แสดงรายการไฟล์ พร้อมหลอดสถานะเรืองแสงไฟล์ที่กำลัง Active อยู่
+// แสดงรายการไฟล์ พร้อมหลอดสถานะแถบเรืองแสง Active
 function renderFileList() {
     const proj = userProjects.find(p => p.id === activeProjectId);
     const list = document.getElementById('file-list');
@@ -266,6 +273,7 @@ function saveCurrentFileCode() {
     const codeInput = document.getElementById('code-input');
     if (proj && proj.activeFile && codeInput) {
         proj.files[proj.activeFile] = codeInput.value;
+        saveProjectsToStorage(); // บันทึกอัตโนมัติ Real-time
     }
 }
 
@@ -291,16 +299,36 @@ function setEditorView(mode) {
     }
 }
 
+// ระบบอัปเดตหน้าตาเว็บสดๆ ทันทีเมื่อพิมพ์โค้ด (ผสาน HTML, CSS, JS)
 function liveUpdatePreview() {
     saveCurrentFileCode();
     const proj = userProjects.find(p => p.id === activeProjectId);
     const iframe = document.getElementById('web-preview-iframe');
     if (!proj || !iframe) return;
 
-    const htmlCode = proj.files['index.html'] || '<div>หน้าเว็บว่างเปล่า</div>';
+    let htmlCode = proj.files['index.html'] || '<div>หน้าเว็บว่างเปล่า</div>';
+    const cssCode = proj.files['style.css'] || '';
+    const jsCode = proj.files['script.js'] || '';
+
+    let fullHtml = htmlCode;
+    if (cssCode) {
+        if (fullHtml.includes('</head>')) {
+            fullHtml = fullHtml.replace('</head>', `<style>${cssCode}</style></head>`);
+        } else {
+            fullHtml = `<style>${cssCode}</style>` + fullHtml;
+        }
+    }
+    if (jsCode) {
+        if (fullHtml.includes('</body>')) {
+            fullHtml = fullHtml.replace('</body>', `<script>${jsCode}<\/script></body>`);
+        } else {
+            fullHtml = fullHtml + `<script>${jsCode}<\/script>`;
+        }
+    }
+
     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
     iframeDoc.open();
-    iframeDoc.write(htmlCode);
+    iframeDoc.write(fullHtml);
     iframeDoc.close();
 }
 
@@ -359,13 +387,14 @@ function handleCreateFile(event) {
     const proj = userProjects.find(p => p.id === activeProjectId);
     if (proj && !proj.files[filename]) {
         proj.files[filename] = `<!-- ไฟล์ ${filename} -->\n`;
+        saveProjectsToStorage();
     }
     closeFileModal();
     switchFile(filename);
 }
 
 // ==========================================
-// GEMINI AI SMART DYNAMIC GENERATOR (สร้างโค้ดตามคำสั่งแชท)
+// GEMINI AI SMART DYNAMIC GENERATOR (สร้างโค้ดตามสั่งแชท)
 // ==========================================
 
 function toggleGeminiWidget() {
@@ -405,7 +434,6 @@ function handleGeminiSubmit(event) {
     }, 1200);
 }
 
-// ฟังก์ชันแปลงข้อความแชทของคุณให้เป็นโครงสร้างเว็บไซต์แบบไดนามิกสดๆ
 function generateSmartCodeFromPrompt(promptText) {
     let themeColor = "indigo";
     let badgeText = "AI GENERATED";
@@ -506,6 +534,7 @@ function appendGeminiMessage(sender, text, codeBlock = null) {
                     const codeInput = document.getElementById('code-input');
                     if (codeInput) codeInput.value = codeBlock;
                     liveUpdatePreview();
+                    saveProjectsToStorage();
                     alert('นำโค้ดที่ Gemini ออกแบบไปใส่ในไฟล์ index.html เรียบร้อยแล้ว!');
                 }
             };
