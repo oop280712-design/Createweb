@@ -100,7 +100,6 @@ function renderProjectCards() {
 function openCreateModal() { document.getElementById('create-modal').classList.remove('hidden'); }
 function closeCreateModal() { document.getElementById('create-modal').classList.add('hidden'); }
 
-// รองรับการพิมพ์นามสกุลโดเมนอิสระ
 function handleCreateSite(event) {
     event.preventDefault();
     const name = document.getElementById('site-name-input').value;
@@ -115,7 +114,9 @@ function handleCreateSite(event) {
         name: name,
         url: fullUrl,
         files: {
-            'index.html': generatePostableTemplate(name, fullUrl)
+            'index.html': generatePostableTemplate(name, fullUrl),
+            'style.css': '/* สไตล์ CSS สำหรับเว็บไซต์ */\nbody { background: #030712; }',
+            'script.js': '// จาวาสคริปต์ทำงานตลอด 24 ชั่วโมง\nconsole.log("System Online 24/7");'
         },
         activeFile: 'index.html'
     };
@@ -151,6 +152,9 @@ function backToDashboard() {
     showDashboard();
 }
 
+// ------------------------------------------
+// ระบบแสดงผลไฟล์และ "หลอดสถานะไฟล์ที่กำลังทำงานอยู่"
+// ------------------------------------------
 function renderFileList() {
     const proj = userProjects.find(p => p.id === activeProjectId);
     const list = document.getElementById('file-list');
@@ -158,10 +162,18 @@ function renderFileList() {
 
     Object.keys(proj.files).forEach(filename => {
         const isSelected = filename === proj.activeFile;
-        const btn = document.createElement('button');
+        const btn = document.createElement('div');
         btn.onclick = () => switchFile(filename);
-        btn.className = `w-full px-3 py-2 rounded-lg text-xs font-mono flex items-center justify-between transition ${isSelected ? 'bg-indigo-600 text-white font-bold' : 'text-gray-400 hover:bg-gray-900 hover:text-white'}`;
-        btn.innerHTML = `<span class="flex items-center gap-2"><i class="fa-regular fa-file-code"></i> ${filename}</span>`;
+        btn.className = `w-full px-3 py-2.5 rounded-xl text-xs font-mono flex items-center justify-between transition cursor-pointer relative group ${isSelected ? 'bg-indigo-600/20 text-indigo-300 font-bold border border-indigo-500/40' : 'text-gray-400 hover:bg-gray-900 hover:text-white border border-transparent'}`;
+        
+        btn.innerHTML = `
+            <span class="flex items-center gap-2 z-10">
+                <i class="fa-regular fa-file-code ${isSelected ? 'text-indigo-400' : 'text-gray-500'}"></i> ${filename}
+            </span>
+            <!-- หลอดสถานะ / แถบเรืองแสงแสดงไฟล์ที่กำลังทำงานอยู่ -->
+            ${isSelected ? '<span class="absolute left-0 top-1.5 bottom-1.5 w-1.5 bg-indigo-500 rounded-r-full shadow-[0_0_10px_#6366f1]"></span>' : ''}
+            ${isSelected ? '<span class="text-[9px] bg-indigo-500 text-white px-1.5 py-0.5 rounded animate-pulse">Active</span>' : ''}
+        `;
         list.appendChild(btn);
     });
 }
@@ -259,7 +271,9 @@ function handleCreateFile(event) {
     switchFile(filename);
 }
 
-// GEMINI AI ASSISTANT LOGIC
+// ==========================================
+// GEMINI AI SMART ENGINE (อัปเดตใหม่ล่าสุด)
+// ==========================================
 function toggleGeminiWidget() {
     document.getElementById('gemini-chat-window').classList.toggle('hidden');
 }
@@ -273,208 +287,120 @@ function handleGeminiSubmit(event) {
     appendGeminiMessage('user', text);
     input.value = '';
 
+    const loadingDiv = document.createElement('div');
+    loadingDiv.id = 'gemini-loading';
+    loadingDiv.className = "bg-gray-800 text-gray-300 p-3 rounded-xl border border-gray-700 max-w-[95%] text-xs flex items-center gap-2";
+    loadingDiv.innerHTML = `<i class="fa-solid fa-spinner animate-spin text-indigo-400"></i> <span>Gemini กำลังออกแบบและสร้างระบบเว็บไซต์ตามคำสั่ง...</span>`;
+    document.getElementById('gemini-messages').appendChild(loadingDiv);
+    scrollGeminiToBottom();
+
     setTimeout(() => {
-        const aiResponse = `สร้างโค้ดสำหรับ "${text}" เรียบร้อยครับ!`;
-        const codeBlock = `<div style="background:#1e1b4b;color:#fff;padding:20px;text-align:center;border-radius:12px;">\n  <h2>${text}</h2>\n  <p>ออกแบบโดย Gemini AI Assistant</p>\n</div>`;
-        appendGeminiMessage('ai', aiResponse, codeBlock);
-    }, 600);
-}
+        const loader = document.getElementById('gemini-loading');
+        if (loader) loader.remove();
 
-function appendGeminiMessage(sender, text, codeBlock = null) {
-    const container = document.getElementById('gemini-messages');
-    const msgDiv = document.createElement('div');
+        let aiResponse = "";
+        let generatedCode = "";
 
-    if (sender === 'user') {
-        msgDiv.className = "bg-indigo-600 text-white p-2.5 rounded-xl ml-auto max-w-[85%] text-xs";
-        msgDiv.innerText = text;
-    } else {
-        msgDiv.className = "bg-gray-800 text-gray-200 p-3 rounded-xl border border-gray-700 max-w-[95%] text-xs space-y-2";
-        msgDiv.innerHTML = `<div>${text}</div>`;
+        if (text.includes('Robux') || text.includes('ไก่ตัน') || text.includes('เติม') || text.includes('ร้าน')) {
+            aiResponse = "🚀 สร้างระบบร้านขายไอดีไก่ตัน และเว็บเติม Robux อัตโนมัติ (พร้อมระบบกรอก Username และเลือกแพ็กเกจ) ให้เรียบร้อยแล้วครับ!";
+            generatedCode = generateRobuxShopCode();
+        } else if (text.includes('พอร์ต') || text.includes('แนะนำตัว') || text.includes('portfolio')) {
+            aiResponse = "🎨 สร้างหน้าเว็บไซต์พอร์ตโฟลิโอส่วนตัว พร้อมดีไซน์ธีมมืดสุดเท่เรียบร้อยครับ!";
+            generatedCode = generatePortfolioCode();
+        } else {
+            aiResponse = `✨ ออกแบบหน้าเว็บไซต์สำหรับ "${text}" ให้เรียบร้อยแล้วครับ! กดนำโค้ดไปวางในไฟล์ได้ทันที`; generatedCode = generateCustomDynamicCode(text); }  appendGeminiMessage('ai', aiResponse, generatedCode); }, 1000); }  function appendGeminiMessage(sender, text, codeBlock = null) { const container = document.getElementById('gemini-messages'); const msgDiv = document.createElement('div');  if (sender === 'user') { msgDiv.className = "bg-indigo-600 text-white p-2.5 rounded-xl ml-auto max-w-[85\%] text-xs shadow-md"; msgDiv.innerText = text; } else { msgDiv.className = "bg-gray-800 text-gray-200 p-3 rounded-xl border border-gray-700 max-w-[95\%] text-xs space-y-2.5"; msgDiv.innerHTML = `<div>${text}</div>`;
 
         if (codeBlock) {
             const applyBtn = document.createElement('button');
-            applyBtn.className = "mt-2 w-full py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded font-sans text-xs font-semibold flex items-center justify-center gap-1";
-            applyBtn.innerHTML = `<i class="fa-solid fa-file-import"></i> นำโค้ดไปใส่ในไฟล์`;
+            applyBtn.className = "w-full py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl font-sans text-xs font-bold flex items-center justify-center gap-2 shadow-lg transition transform hover:scale-[1.02]";
+            applyBtn.innerHTML = `<i class="fa-solid fa-file-import"></i> นำโค้ดไปวางในไฟล์ index.html ทันที`;
             applyBtn.onclick = () => {
+                if (!activeProjectId) {
+                    alert('กรุณาเลือกหรือสร้างเว็บไซต์ในระบบก่อนครับ');
+                    return;
+                }
                 const proj = userProjects.find(p => p.id === activeProjectId);
-                proj.files[proj.activeFile] = codeBlock;
-                document.getElementById('code-input').value = codeBlock;
-                liveUpdatePreview();
-                alert('อัปเดตโค้ดเข้าสู่ไฟล์เรียบร้อย!');
+                if (proj) {
+                    proj.files['index.html'] = codeBlock;
+                    document.getElementById('code-input').value = codeBlock;
+                    liveUpdatePreview();
+                    alert('นำโค้ดที่ Gemini ออกแบบไปใส่ในไฟล์ index.html เรียบร้อยแล้ว!');
+                }
             };
             msgDiv.appendChild(applyBtn);
         }
     }
+
     container.appendChild(msgDiv);
+    scrollGeminiToBottom();
+}
+
+function scrollGeminiToBottom() {
+    const container = document.getElementById('gemini-messages');
     container.scrollTop = container.scrollHeight;
 }
 
-// แม่แบบเว็บไซต์ (จำกัดสิทธิ์อัปโหลดรูปภาพเฉพาะเจ้าของเว็บเท่านั้น)
-function generatePostableTemplate(siteName, siteUrl) {
+// ------------------------------------------
+// แม่แบบโค้ดต่างๆ ที่ Gemini AI สร้างให้
+// ------------------------------------------
+function generateRobuxShopCode() {
     return `<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${siteName} - ประโยชน์และบริการของเว็บไซต์</title>
+    <title>BloxShop - ร้านขายไก่ตัน & เติม Robux อัตโนมัติ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-gray-950 text-gray-100 font-sans min-h-screen">
-
-    <header class="bg-gray-900 border-b border-gray-800 py-4 px-6 sticky top-0 z-30">
-        <div class="max-w-6xl mx-auto flex justify-between items-center">
+    <header class="bg-gray-900 border-b border-gray-800 sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-3.5 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold text-lg">
-                    <i class="fa-solid fa-globe"></i>
-                </div>
-                <div>
-                    <h1 class="text-base font-bold text-white">${siteName}</h1>
-                    <p class="text-[11px] text-indigo-400 font-mono">${siteUrl}</p>
-                </div>
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-600 flex items-center justify-center text-white text-xl font-black">R</div>
+                <span class="font-bold text-lg text-white">BloxShop <span class="text-xs text-amber-400 bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800">ROBUX 24H</span></span>
             </div>
-
-            <!-- ปุ่มสลับโหมดเจ้าของเว็บ (ผู้สร้างเว็บเท่านั้น) -->
-            <button onclick="toggleOwnerMode()" id="owner-toggle-btn" class="px-3.5 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs rounded-xl border border-gray-700 flex items-center gap-2 transition">
-                <i class="fa-solid fa-lock"></i> มุมมองผู้เยี่ยมชม (ห้ามอัปโหลดรูป)
-            </button>
+            <span class="text-xs font-mono text-emerald-400 bg-emerald-950 px-3 py-1.5 rounded-xl border border-emerald-800 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> ระบบอัตโนมัติทำงาน 24 ชม.
+            </span>
         </div>
     </header>
 
-    <main class="max-w-6xl mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
-        
-        <!-- แผงอัปโหลดรูปเฉพาะเจ้าของเว็บเท่านั้น -->
-        <div id="owner-panel" class="hidden lg:col-span-1 bg-gray-900 p-5 rounded-2xl border border-indigo-500/30 shadow-2xl h-fit sticky top-24 space-y-4">
-            <div class="flex items-center justify-between pb-2 border-b border-gray-800">
-                <h2 class="text-sm font-bold text-indigo-400 flex items-center gap-2">
-                    <i class="fa-solid fa-user-shield"></i> แผงควบคุมเจ้าของเว็บ
-                </h2>
-                <span class="text-[10px] bg-indigo-950 text-indigo-300 px-2 py-0.5 rounded border border-indigo-800">ผู้สร้างเว็บเท่านั้น</span>
-            </div>
-
-            <form onsubmit="addBenefitItem(event)" class="space-y-3">
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">หัวข้อประโยชน์ / จุดเด่น</label>
-                    <input type="text" id="benefit-title" required placeholder="เช่น ประหยัดเวลา, ใช้งานง่าย" class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">URL รูปภาพตัวอย่าง</label>
-                    <input type="url" id="benefit-img" required placeholder="https://images.unsplash.com/..." class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">คำอธิบายรายละเอียดประโยชน์</label>
-                    <textarea id="benefit-desc" rows="3" placeholder="อธิบายว่าฟีเจอร์นี้มีประโยชน์อย่างไร..." class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500"></textarea>
-                </div>
-                <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-indigo-600/20">
-                    <i class="fa-solid fa-plus mr-1"></i> โพสต์ภาพตัวอย่าง & ประโยชน์
-                </button>
-            </form>
+    <main class="max-w-6xl mx-auto p-4 md:p-8 space-y-8">
+        <div class="bg-gradient-to-r from-rose-900/40 to-indigo-900/40 border border-rose-500/20 rounded-3xl p-6 md:p-8 text-center md:text-left">
+            <span class="text-xs font-bold uppercase text-rose-400 bg-rose-950 px-3 py-1 rounded-full border border-rose-800 mb-3 inline-block">บริการเติม Robux & ขายไอดี</span>
+            <h1 class="text-2xl md:text-4xl font-extrabold text-white mb-2">เติม Robux อัตโนมัติ & ร้านไก่ตัน</h1>
+            <p class="text-sm text-gray-300">เข้าบัญชีทันที ปลอดภัย ด้วยระบบ Roblox Gamepass API</p>
         </div>
 
-        <div id="content-container" class="lg:col-span-4 space-y-8">
-            <div class="bg-gradient-to-r from-indigo-900/40 via-purple-900/30 to-gray-900 border border-indigo-500/20 rounded-3xl p-6 md:p-10 text-center relative overflow-hidden">
-                <div class="max-w-2xl mx-auto">
-                    <span class="text-xs font-bold uppercase tracking-widest text-indigo-400 bg-indigo-950/80 px-3 py-1 rounded-full border border-indigo-800 mb-3 inline-block">Official Website</span>
-                    <h2 class="text-2xl md:text-3xl font-bold text-white mb-3">ยินดีต้อนรับสู่ ${siteName}</h2>
-                    <p class="text-sm text-gray-300 leading-relaxed">เว็บไซต์นี้ออนไลน์และทำงานต่อเนื่อง 24 ชั่วโมง ด้านล่างคือภาพตัวอย่างและประโยชน์ของเว็บไซต์ครับ</p>
+        <div class="bg-gray-900 border border-gray-800 rounded-3xl p-6 shadow-2xl">
+            <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2"><i class="fa-solid fa-coins text-amber-400"></i> ระบบเติม Robux เข้าบัญชีอัตโนมัติ</h2>
+            <form onsubmit="processRobuxTopup(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 mb-1">1. ชื่อบัญชี Roblox (Username)</label>
+                    <input type="text" id="roblox-username" required placeholder="เช่น RobloxUser123" class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-white focus:outline-none focus:border-amber-500">
                 </div>
-            </div>
-
-            <div>
-                <div class="flex items-center justify-between mb-6">
-                    <div>
-                        <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                            <i class="fa-solid fa-star text-amber-400"></i> ประโยชน์และจุดเด่นของเว็บไซต์
-                        </h3>
-                        <p class="text-xs text-gray-400">ภาพตัวอย่างและผลงานที่ผู้สร้างเว็บไซต์นำมาเผยแพร่</p>
-                    </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 mb-1">2. เลือกแพ็กเกจ Robux</label>
+                    <select id="robux-package" class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-white focus:outline-none focus:border-amber-500">
+                        <option value="100">100 Robux - 35 บาท</option>
+                        <option value="500">500 Robux - 160 บาท 🔥</option>
+                        <option value="1000">1,000 Robux - 300 บาท</option>
+                    </select>
                 </div>
-
-                <div id="benefits-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="benefit-card bg-gray-900 rounded-2xl overflow-hidden border border-gray-800 hover:border-indigo-500/50 transition relative">
-                        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600" class="w-full h-48 object-cover">
-                        <div class="p-5">
-                            <h4 class="font-bold text-base text-white mb-2 flex items-center gap-2">
-                                <i class="fa-solid fa-bolt text-indigo-400"></i> ประมวลผลและทำงาน 24 ชั่วโมง
-                            </h4>
-                            <p class="text-xs text-gray-400 leading-relaxed">ระบบเว็บไซต์ทำงานแบบไร้รอยต่อ ให้ผู้ใช้งานเข้าถึงข้อมูลและดูภาพตัวอย่างได้ตลอดเวลา</p>
-                        </div>
-                    </div>
+                <div class="flex items-end">
+                    <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm rounded-xl transition">ยืนยันการเติม Robux</button>
                 </div>
-            </div>
+            </form>
+            <div id="topup-status-msg" class="hidden mt-4 p-4 rounded-xl bg-gray-950 border border-emerald-500/30 text-emerald-400 text-xs"></div>
         </div>
     </main>
 
     <script>
-        let isOwner = false;
-
-        function toggleOwnerMode() {
-            isOwner = !isOwner;
-            const panel = document.getElementById('owner-panel');
-            const contentContainer = document.getElementById('content-container');
-            const btn = document.getElementById('owner-toggle-btn');
-
-            if (isOwner) {
-                panel.classList.remove('hidden');
-                contentContainer.className = "lg:col-span-3 space-y-8";
-                btn.className = "px-3.5 py-2 bg-indigo-600 text-white text-xs rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-indigo-600/30";
-                btn.innerHTML = '<i class="fa-solid fa-user-shield"></i> สิทธิ์เจ้าของเว็บ (อัปโหลดรูปภาพได้)';
-            } else {
-                panel.classList.add('hidden');
-                contentContainer.className = "lg:col-span-4 space-y-8";
-                btn.className = "px-3.5 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs rounded-xl border border-gray-700 flex items-center gap-2 transition";
-                btn.innerHTML = '<i class="fa-solid fa-lock"></i> มุมมองผู้เยี่ยมชม (ห้ามอัปโหลดรูป)';
-            }
-            renderDeleteButtons();
-        }
-
-        function addBenefitItem(e) {
+        function processRobuxTopup(e) {
             e.preventDefault();
-            if (!isOwner) return;
-
-            const title = document.getElementById('benefit-title').value;
-            const img = document.getElementById('benefit-img').value;
-            const desc = document.getElementById('benefit-desc').value;
-
-            const grid = document.getElementById('benefits-grid');
-            const card = document.createElement('div');
-            card.className = "benefit-card bg-gray-900 rounded-2xl overflow-hidden border border-gray-800 hover:border-indigo-500/50 transition relative group";
-            card.innerHTML = \`
-                <div>
-                    <img src="\${img}" class="w-full h-48 object-cover" onerror="this.src='https://via.placeholder.com/600x300?text=Image+Error'">
-                    <div class="p-5">
-                        <h4 class="font-bold text-base text-white mb-2 flex items-center gap-2">
-                            <i class="fa-solid fa-check-circle text-indigo-400"></i> \${title}
-                        </h4>
-                        <p class="text-xs text-gray-400 leading-relaxed">\${desc}</p>
-                    </div>
-                </div>
-                \${isOwner ? '<button onclick="this.closest(\\'div.benefit-card\\').remove();" class="delete-btn absolute top-3 right-3 w-8 h-8 rounded-xl bg-rose-600/90 text-white text-xs flex items-center justify-center hover:bg-rose-500 transition shadow-lg"><i class="fa-solid fa-trash"></i></button>' : ''}
-            \`;
-
-            grid.prepend(card);
-            document.getElementById('benefit-title').value = '';
-            document.getElementById('benefit-img').value = '';
-            document.getElementById('benefit-desc').value = '';
-        }
-
-        function renderDeleteButtons() {
-            const cards = document.querySelectorAll('.benefit-card');
-            cards.forEach(card => {
-                let delBtn = card.querySelector('.delete-btn');
-                if (isOwner && !delBtn) {
-                    const btn = document.createElement('button');
-                    btn.className = "delete-btn absolute top-3 right-3 w-8 h-8 rounded-xl bg-rose-600/90 text-white text-xs flex items-center justify-center hover:bg-rose-500 transition shadow-lg";
-                    btn.innerHTML = '<i class="fa-solid fa-trash"></i>';
-                    btn.onclick = () => card.remove();
-                    card.classList.add('relative');
-                    card.appendChild(btn);
-                } else if (!isOwner && delBtn) {
-                    delBtn.remove();
-                }
-            });
-        }
-    <\/script>
-</body>
-</html>`;
-}
+            const user = document.getElementById('roblox-username').value;
+            const amount = document.getElementById('robux-package').value;
+            const status = document.getElementById('topup-status-msg');
+            status.classList.remove('hidden');
+            status.innerText = "กำลังโอน " + amount + " Robux ไป
